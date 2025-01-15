@@ -71,6 +71,7 @@ def main():
     print(commands)
     # TODO ---------
     # print path.txt
+    # add mine handling
 
 if __name__ == "__main__":
     main()
