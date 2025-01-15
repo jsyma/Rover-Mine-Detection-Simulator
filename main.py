@@ -70,6 +70,7 @@ def main():
     generate_rover_path(1, commands)
     print(commands)
     # TODO ---------
+    # print path.txt
 
 if __name__ == "__main__":
     main()
