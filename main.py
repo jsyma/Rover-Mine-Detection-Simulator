@@ -69,7 +69,9 @@ def main():
     commands = get_rover_commands(10)
     generate_rover_path(1, commands)
     print(commands)
-    #TODO ---
+    # TODO ---------
+    # print path.txt
+    # add mine handling
 
 if __name__ == "__main__":
     main()
