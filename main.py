@@ -1,6 +1,8 @@
 import requests
 import json
 import copy
+import os 
+import time 
 
 def get_rover_commands(rover_count):
     '''
@@ -44,9 +46,14 @@ def rover_movement(rover_id, commands, info, starter_map):
                 rover_col_pos -= 1
             elif current_direction == "EAST" and rover_col_pos + 1 <= number_of_cols:
                 rover_col_pos += 1
-            #print(rover_row_pos, rover_col_pos)
+            if map[rover_row_pos][rover_col_pos] == 1:
+                print(f"Rover {rover_id + 1} hit a mine at ({rover_row_pos}, {rover_col_pos})!")
+                # Stop processing the rest of the commands
+                return map
             map[rover_row_pos][rover_col_pos] = "*"
-
+        elif move == 'D':
+            # Need a mine_check function to see if can disarm and continue with the commands
+            continue
     return map
 
 # def generate_rover_path(rover_id, commands, map_info):
@@ -87,6 +94,16 @@ def rover_movement(rover_id, commands, info, starter_map):
 #     print(f'Total time took: {total_time} seconds.')
 
 def rotate_rover(current_direction, move) -> str:
+    '''
+    Rotate the rover's direction based on the given movement command using a predefined sequence of directions.
+
+    Args:
+        current_direction (str): The current direction of the rover. Valid options: "NORTH", "EAST", "SOUTH", "WEST".
+        move (str): The rotation command. Valid options: "L", "R".
+
+    Returns:
+        str: The new direction of the rover after the rotation. 
+    '''
     directions = ["NORTH", "EAST", "SOUTH", "WEST"]
     idx = directions.index(current_direction)
     
@@ -134,24 +151,27 @@ def write_rover_path_to_file(rover_id, rover_map):
         rover_id (int): The rover ID.
         rover_map (list): A 2D list representing the rover's path/map, with each cell being '0', '1' or '*'. 
     '''
-    file_name = f'path_{rover_id + 1}.txt'
-    print(f"Writing to {file_name}")
+    directory = 'output_rover_paths'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    file_name = os.path.join(directory, f'path_{rover_id + 1}.txt')
     with open(file_name, 'w') as f:
         for row in rover_map:
             f.write(" ".join([str(cell) for cell in row]) + "\n")
 
-
 def main():
+    start_time = time.time()
     map_info, map = build_map("map1.txt")
     commands = get_rover_commands(10)
     for rover_id in range(10):
         map_copy = copy.deepcopy(map)
         updated_map = rover_movement(rover_id, commands, map_info, map_copy)
         write_rover_path_to_file(rover_id, updated_map)
+    end_time = time.time()
+    print(f"Total time to process and write all rover paths: {end_time - start_time:.2f} seconds.")
     # TODO ---------
     # add mine handling
-
-   
 
 if __name__ == "__main__":
     main()
