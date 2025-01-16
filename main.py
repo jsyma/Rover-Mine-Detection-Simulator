@@ -1,6 +1,6 @@
 import requests
 import json
-
+import copy
 
 def get_rover_commands(rover_count):
     '''
@@ -44,7 +44,7 @@ def rover_movement(rover_id, commands, info, starter_map):
                 rover_col_pos -= 1
             elif current_direction == "EAST" and rover_col_pos + 1 <= number_of_cols:
                 rover_col_pos += 1
-            print(rover_row_pos, rover_col_pos)
+            #print(rover_row_pos, rover_col_pos)
             map[rover_row_pos][rover_col_pos] = "*"
 
     return map
@@ -99,10 +99,21 @@ def rotate_rover(current_direction, move) -> str:
 
 
 def build_map(map_file_name):
+    '''
+    Reads a map file and builds a grid representation of the map. 
+
+    Args: 
+        map_file_name (str): The name of the file containing the map data.
+    
+    Returns:
+        tuple: A tuple containing:
+            - map_info (list): A list of two integers, first one being the number of rows and second one is the number of columns.
+            - map (list): A 2D list of the map, with each cell being either '0' or '1'.
+    '''
     fmap = open(map_file_name, 'r')
-    info = fmap.readline().split()
-    rows = (int)(info[0])
-    cols = (int)(info[1])
+    map_info = fmap.readline().split()
+    rows = (int)(map_info[0])
+    cols = (int)(map_info[1])
 
     map = [[0 for i in range(cols)] for j in range(rows)]
 
@@ -113,30 +124,34 @@ def build_map(map_file_name):
                 map[row][col] = 1
     fmap.close()    
 
-    return info, map
+    return map_info, map
 
-def write_rover_path_to_file(rover_id, map):
-    file_name = f'path_{rover_id}.txt'
+def write_rover_path_to_file(rover_id, rover_map):
+    '''
+    Writes the rover's path/updated map to a .txt file.
+
+    Args: 
+        rover_id (int): The rover ID.
+        rover_map (list): A 2D list representing the rover's path/map, with each cell being '0', '1' or '*'. 
+    '''
+    file_name = f'path_{rover_id + 1}.txt'
+    print(f"Writing to {file_name}")
     with open(file_name, 'w') as f:
-        for row in map:
+        for row in rover_map:
             f.write(" ".join([str(cell) for cell in row]) + "\n")
 
+
 def main():
-    info,map = build_map("map1.txt")
-
+    map_info, map = build_map("map1.txt")
     commands = get_rover_commands(10)
-    print(info)
-    for x in map:
-        print(x)
-
-    print("...")
-
-    new_map = rover_movement(0, commands, info, map)
-    for x in new_map:
-        print(x)
-    write_rover_path_to_file(1, new_map)
+    for rover_id in range(10):
+        map_copy = copy.deepcopy(map)
+        updated_map = rover_movement(rover_id, commands, map_info, map_copy)
+        write_rover_path_to_file(rover_id, updated_map)
     # TODO ---------
     # add mine handling
+
+   
 
 if __name__ == "__main__":
     main()
