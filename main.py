@@ -3,10 +3,13 @@ import json
 import copy
 import os 
 import time 
+from threading import Thread, Lock
+
+lock = Lock()
 
 def get_rover_commands(rover_count):
     '''
-    Gets the rover commands from the provided api
+    Gets the rover commands from the provided api.
 
     Args: 
         rover_count (int): The number of rovers to get commands from.
@@ -56,43 +59,6 @@ def rover_movement(rover_id, commands, info, starter_map):
             continue
     return map
 
-# def generate_rover_path(rover_id, commands, map_info):
-    
-#     dig = False
-#     current_row = 1
-#     current_col = 0
-#     current_direction = "SOUTH"
-#     max_rows = map_info[0]
-#     max_cols = map_info[1]
-
-#     # Need an Update Rover Path Function 
-#     total_time = 0
-#     for move in commands[rover_id]:
-#         if move == 'L' or move == 'R':
-#             current_direction = rotate_rover(current_direction, move)
-            
-
-#         elif move == 'M':
-            
-#             if current_direction == "SOUTH":
-#                 if current_row < max_rows:
-#                     current_row += 1
-#             elif current_direction == "WEST":
-#                 if current_col >= 2:
-#                     current_col -= 2
-#             elif current_direction == "NORTH":
-#                 if current_row > 1:
-#                     current_row -= 1
-#             elif current_direction == "EAST":
-#                 if current_col < ((3 - 1) * 2):
-#                     current_col += 2
-
-#         elif move == 'D':
-#             dig = True
-#             # Need a Check for Mine 
-    
-#     print(f'Total time took: {total_time} seconds.')
-
 def rotate_rover(current_direction, move) -> str:
     '''
     Rotate the rover's direction based on the given movement command using a predefined sequence of directions.
@@ -124,7 +90,7 @@ def build_map(map_file_name):
     
     Returns:
         tuple: A tuple containing:
-            - map_info (list): A list of two integers, first one being the number of rows and second one is the number of columns.
+            - map_info (list): A list containing the dimensions of the map [rows, columns].
             - map (list): A 2D list of the map, with each cell being either '0' or '1'.
     '''
     fmap = open(map_file_name, 'r')
@@ -160,16 +126,47 @@ def write_rover_path_to_file(rover_id, rover_map):
         for row in rover_map:
             f.write(" ".join([str(cell) for cell in row]) + "\n")
 
+def generate_rover_path(rover_id, commands, map_info, map):
+    '''
+    Processes a rover's command sequence, updates the map with its traversed path and generates the updated map to a .txt file.
+
+    Args: 
+        rover_id (int): The unique ID of the rover (0-indexed).
+        commands (list): A list of command sequences for all rovers.
+        map_info (list): A list containing the dimensions of the map [rows, columns].
+        map (list): A 2D list of the map, with each cell being either '0' or '1'.
+    '''
+    map_copy = copy.deepcopy(map)
+    updated_map = rover_movement(rover_id, commands, map_info, map_copy)
+    write_rover_path_to_file(rover_id, updated_map)
+
 def main():
+    # Sequential Execution  
     start_time = time.time()
     map_info, map = build_map("map1.txt")
     commands = get_rover_commands(10)
     for rover_id in range(10):
-        map_copy = copy.deepcopy(map)
-        updated_map = rover_movement(rover_id, commands, map_info, map_copy)
-        write_rover_path_to_file(rover_id, updated_map)
-    end_time = time.time()
-    print(f"Total time to process and write all rover paths: {end_time - start_time:.2f} seconds.")
+        generate_rover_path(rover_id, commands, map_info, map)
+    sequential_time = time.time() - start_time
+    print(f"Sequential processing time: {sequential_time:.2f} seconds.")
+   
+   # Parallel execution using threading
+    start_time = time.time()
+    threads = []
+    for rover_id in range(10):
+        thread = Thread(target=generate_rover_path, args=(rover_id, commands, map_info, map))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    parallel_time = time.time() - start_time
+    print(f"Parallel processing time: {parallel_time:.2f} seconds.")
+
+    # Difference between sequential vs parallel
+    print(f"Time difference: {sequential_time -  parallel_time:.2f} seconds.")
+   
     # TODO ---------
     # add mine handling
 
