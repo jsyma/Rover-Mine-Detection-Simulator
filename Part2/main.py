@@ -5,7 +5,6 @@ import os
 from time import perf_counter 
 from hashlib import sha256
 from threading import Thread, Lock
-from multiprocessing import Process
 
 lock = Lock()
 
@@ -216,7 +215,7 @@ def create_mine_serial_mapping(mine_file_name, rover_id):
 def disarm_mine(serial_number):
     '''
     Disarms a mine based on its serial number by iterating through potential PIN values and hashing the combination of serial 
-    number and PIN until a hash is found that starts with '000000'. Simulates finding a correct PIN to disarm the mine. 
+    number and PIN until a hash is found that starts with '00000'. Simulates finding a correct PIN to disarm the mine. 
 
     Args: 
         serial_number (str): The serial number of the mine to be disarmed.
@@ -281,40 +280,12 @@ def run_rovers_in_threads(commands, map_info, map, mine_serial_mapping, output_f
     end_time = perf_counter()
     return end_time - start_time
 
-def run_rovers_in_processes(commands, map_info, map, mine_serial_mapping, output_folder): 
-    '''
-    Runs the rover commands concurrently using multiple processes.
-
-    Args:
-        commands (list): A list of command sequences for all rovers.
-        map_info (list): A list containing the dimensions of the map [rows, columns].
-        map (list): A 2D list of the map, with each cell being either '0' or '1'.
-        mine_serial_mapping (dict): A mapping of mine locations to serial numbers.
-
-    Returns:
-        float: The time taken to process all rovers using multiprocessing, in seconds.
-    '''
-    processes = []
-    start_time = perf_counter()
-    for rover_id in range(0, 10):
-        process = Process(target=generate_rover_path, args=(rover_id, commands, map_info, map, mine_serial_mapping, output_folder))
-        processes.append(process)
-
-    for process in processes:
-        process.start()
-
-    for process in processes: 
-        process.join()
-
-    end_time = perf_counter()
-    return end_time - start_time
-
 def main():
     '''
     The main entry point of the program. 
     - Loads the map and rover commands.
     - Creates a mapping of rover_id to mine serial numbers.
-    - Runs the rovers sequentially and in parallel (using threading or multiprocessing).
+    - Runs the rovers sequentially and in parallel (using threading).
     - Compares the performance times of sequential vs. parallel processing. 
     - Prints out the execution time for each approach and the difference in time. 
     '''
@@ -332,17 +303,12 @@ def main():
     threading_output_folder = 'output_threading_paths'
     threading_time = run_rovers_in_threads(commands, map_info, map, mine_serial_mapping, threading_output_folder)
     
-    # Parallel Execution Using Multiple Processes
-    multiprocessing_output_folder = 'output_multiprocessing_paths'
-    multiprocessing_time = run_rovers_in_processes(commands, map_info, map, mine_serial_mapping, multiprocessing_output_folder)
 
     print(f"Sequential processing time: {sequential_time:.2f} seconds.")
     print(f"Parallel processing time (Threading): {threading_time:.2f} seconds.")
-    print(f"Parallel processing time (Multiprocessing): {multiprocessing_time:.2f} seconds.")
 
     # Difference between sequential vs parallel
     print(f"Time difference (Sequential - Threading): {sequential_time - threading_time:.2f} seconds.")
-    print(f"Time difference (Sequential - Multiprocessing): {sequential_time - multiprocessing_time:.2f} seconds.")
 
 if __name__ == "__main__":
     main()
