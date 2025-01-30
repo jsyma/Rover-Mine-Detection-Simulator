@@ -90,6 +90,7 @@ def rover_movement(rover_id, commands, info, starter_map):
     rover_row_pos = 0
     rover_col_pos = 0
     current_direction = "SOUTH"
+    disarm = False
     mine_locations = get_location_of_mines(map, info)
 
     for move in commands[rover_id]:
@@ -114,13 +115,17 @@ def rover_movement(rover_id, commands, info, starter_map):
             if update: 
                 # Used in threading
                 with lock:   
-                    if ((prev_row, prev_col) in mine_locations):
+                    if not disarm and ((prev_row, prev_col) in mine_locations):
                         print(f"Rover {rover_id + 1} hit a mine at ({prev_row}, {prev_col})!")
                         # Stop processing the rest of the commands and Mark as Exploded
                         map[prev_row][prev_col] = "X"
                         break
+                disarm = False
                 map[rover_row_pos][rover_col_pos] = "*"
         elif move == 'D':
+            disarm = True 
+            if (rover_row_pos, rover_col_pos) in mine_locations:
+                print("Disarming Mine")
             continue 
         
     return map
@@ -243,14 +248,16 @@ def main():
 
     # Sequential Execution
     sequential_output_folder = 'output_sequential_paths'
+    print("\nStarting Sequential Execution:")
     sequential_time = run_rovers_sequentially(commands, map_info, map, sequential_output_folder)
     
     # Parallel Execution Using Threading
     threading_output_folder = 'output_threading_paths'
+    print("\nStarting Threaded Execution:")
     threading_time = run_rovers_in_threads(commands, map_info, map, threading_output_folder)
     
 
-    print(f"Sequential processing time: {sequential_time:.2f} seconds.")
+    print(f"\nSequential processing time: {sequential_time:.2f} seconds.")
     print(f"Parallel processing time (Threading): {threading_time:.2f} seconds.")
 
     # Difference between sequential vs parallel

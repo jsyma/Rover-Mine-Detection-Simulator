@@ -171,7 +171,7 @@ def generate_rover_path(rover_id, commands, map_info, map, mine_serial_mapping, 
     with lock:
         write_rover_path_to_file(rover_id, updated_map, output_folder)
 
-def get_location_of_mines(map,map_info):
+def get_location_of_mines(map, map_info):
     '''
     Extracts the locations of mines from the map.
 
@@ -297,14 +297,16 @@ def main():
 
     # Sequential Execution
     sequential_output_folder = 'output_sequential_paths'
+    print("\nStarting Sequential Execution:")
     sequential_time = run_rovers_sequentially(commands, map_info, map, mine_serial_mapping, sequential_output_folder)
     
     # Parallel Execution Using Threading
     threading_output_folder = 'output_threading_paths'
+    print("\nStarting Threaded Execution:")
     threading_time = run_rovers_in_threads(commands, map_info, map, mine_serial_mapping, threading_output_folder)
     
 
-    print(f"Sequential processing time: {sequential_time:.2f} seconds.")
+    print(f"\nSequential processing time: {sequential_time:.2f} seconds.")
     print(f"Parallel processing time (Threading): {threading_time:.2f} seconds.")
 
     # Difference between sequential vs parallel
