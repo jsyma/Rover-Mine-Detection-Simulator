@@ -257,11 +257,11 @@ def main():
     threading_time = run_rovers_in_threads(commands, map_info, map, threading_output_folder)
     
 
-    print(f"\nSequential processing time: {sequential_time:.2f} seconds.")
-    print(f"Parallel processing time (Threading): {threading_time:.2f} seconds.")
+    print(f"\nSequential processing time: {sequential_time:.5f} seconds.")
+    print(f"Parallel processing time (Threading): {threading_time:.5f} seconds.")
 
     # Difference between sequential vs parallel
-    print(f"Time difference (Sequential - Threading): {sequential_time - threading_time:.2f} seconds.")
+    print(f"Time difference (Sequential - Threading): {sequential_time - threading_time:.5f} seconds.")
 
 if __name__ == "__main__":
     main()
